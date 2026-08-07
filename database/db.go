@@ -15,51 +15,55 @@ import (
 )
 
 var (
-	db          *gorm.DB
-	once        sync.Once
-	encryptKey  = []byte("3xui_encryption_key_2024_secure!")
+	db         *gorm.DB
+	once       sync.Once
+	encryptKey = []byte("3xui_encryption_key_2024_secure!")
 )
 
+// User represents admin user
 type User struct {
 	gorm.Model
 	Username string `gorm:"uniqueIndex;not null"`
 	Password string `gorm:"not null"`
 }
 
+// Inbound represents an inbound configuration
 type Inbound struct {
 	gorm.Model
-	Tag           string `gorm:"uniqueIndex;not null"`
-	Port          int    `gorm:"not null"`
-	Protocol      string `gorm:"not null"`
-	Settings      string `gorm:"type:text"`
-	StreamSettings string `gorm:"type:text"`
-	Sniffing      string `gorm:"type:text"`
-	Enable        bool   `gorm:"default:true"`
-	Remark        string
-	TotalTraffic  int64  `gorm:"default:0"` // bytes
-	UsedTraffic   int64  `gorm:"default:0"` // bytes
-	ExpiryTime    int64  `gorm:"default:0"` // timestamp in ms
-	Clients       []Client `gorm:"foreignKey:InboundID"`
+	Tag            string   `gorm:"uniqueIndex;not null"`
+	Port           int      `gorm:"not null"`
+	Protocol       string   `gorm:"not null"`
+	Settings       string   `gorm:"type:text"`
+	StreamSettings string   `gorm:"type:text"`
+	Sniffing       string   `gorm:"type:text"`
+	Enable         bool     `gorm:"default:true"`
+	Remark         string
+	TotalTraffic   int64    `gorm:"default:0"` // bytes
+	UsedTraffic    int64    `gorm:"default:0"` // bytes
+	ExpiryTime     int64    `gorm:"default:0"` // timestamp in ms
+	Clients        []Client `gorm:"foreignKey:InboundID;constraint:OnDelete:CASCADE"`
 }
 
+// Client represents a client/user configuration
 type Client struct {
 	gorm.Model
-	InboundID     uint   `gorm:"not null;index"`
-	Email         string `gorm:"uniqueIndex;not null"`
-	UUID          string
-	Flow          string
-	Encryption    string
-	AlterID       int    `gorm:"default:0"`
-	Security      string
-	Password      string
-	TotalTraffic  int64  `gorm:"default:0"` // bytes
-	UsedTraffic   int64  `gorm:"default:0"` // bytes
-	ExpiryTime    int64  `gorm:"default:0"` // timestamp in ms
-	Enable        bool   `gorm:"default:true"`
-	SubID         string `gorm:"uniqueIndex"`
-	Inbound       Inbound
+	InboundID    uint   `gorm:"not null;index"`
+	Email        string `gorm:"uniqueIndex;not null"`
+	UUID         string
+	Flow         string
+	Encryption   string
+	AlterID      int    `gorm:"default:0"`
+	Security     string `gorm:"default:auto"`
+	Password     string
+	TotalTraffic int64  `gorm:"default:0"` // bytes
+	UsedTraffic  int64  `gorm:"default:0"` // bytes
+	ExpiryTime   int64  `gorm:"default:0"` // timestamp in ms
+	Enable       bool   `gorm:"default:true"`
+	SubID        string `gorm:"uniqueIndex"`
+	Inbound      Inbound
 }
 
+// Stats represents traffic statistics
 type Stats struct {
 	gorm.Model
 	InboundID uint
@@ -68,10 +72,30 @@ type Stats struct {
 	Time      time.Time
 }
 
+// Settings represents panel settings
 type Settings struct {
 	gorm.Model
 	Key   string `gorm:"uniqueIndex;not null"`
 	Value string `gorm:"type:text"`
+}
+
+// TrafficLog represents traffic logs for history
+type TrafficLog struct {
+	gorm.Model
+	InboundID   uint
+	ClientID    uint
+	UpTraffic   int64
+	DownTraffic int64
+	Date        string `gorm:"index"`
+}
+
+// OnlineUser represents currently online users
+type OnlineUser struct {
+	gorm.Model
+	Email     string `gorm:"uniqueIndex"`
+	InboundID uint
+	IP        string
+	LastSeen  time.Time
 }
 
 func encrypt(text string) (string, error) {
@@ -109,6 +133,7 @@ func decrypt(encoded string) (string, error) {
 	return string(ciphertext), nil
 }
 
+// InitDB initializes the database connection and creates tables
 func InitDB() error {
 	var err error
 	once.Do(func() {
@@ -116,7 +141,7 @@ func InitDB() error {
 		if err != nil {
 			return
 		}
-		err = db.AutoMigrate(&User{}, &Inbound{}, &Client{}, &Stats{}, &Settings{})
+		err = db.AutoMigrate(&User{}, &Inbound{}, &Client{}, &Stats{}, &Settings{}, &TrafficLog{}, &OnlineUser{})
 		if err != nil {
 			return
 		}
@@ -144,6 +169,12 @@ func createDefaultSettings() {
 		{"key": "subEncrypt", "value": "true"},
 		{"key": "subShowInfo", "value": "true"},
 		{"key": "timeLocation", "value": "Asia/Tehran"},
+		{"key": "telegramBotToken", "value": ""},
+		{"key": "telegramBotChatID", "value": ""},
+		{"key": "sessionMaxAge", "value": "0"},
+		{"key": "secret", "value": ""},
+		{"key": "expireDiff", "value": "0"},
+		{"key": "trafficDiff", "value": "0"},
 	}
 	for _, s := range settings {
 		var existing Settings
@@ -154,6 +185,7 @@ func createDefaultSettings() {
 	}
 }
 
+// GetDB returns the database instance
 func GetDB() *gorm.DB {
 	return db
 }
@@ -163,10 +195,20 @@ func hashPassword(password string) string {
 	return hashed
 }
 
-func checkPassword(hashed, password string) bool {
+// CheckPassword verifies a password against its hash
+func CheckPassword(hashed, password string) bool {
 	decrypted, err := decrypt(hashed)
 	if err != nil {
 		return false
 	}
 	return decrypted == password
+}
+
+// CloseDB closes the database connection
+func CloseDB() error {
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
 }

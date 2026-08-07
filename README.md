@@ -1,60 +1,134 @@
-# x-ui Panel
+# x-ui Panel - مدیریت حرفه‌ای پروکسی
 
-A lightweight and powerful proxy panel written in Go, similar to 3x-ui.
+<div dir="rtl">
 
-## Features
+## 🌟 ویژگی‌های کلیدی
 
-- **Lightweight**: Written in Go, single binary deployment
-- **Web UI**: Modern and responsive web interface
-- **Multi-protocol**: Support for VMess, VLESS, Trojan
-- **Easy Installation**: One-command installation script
-- **Systemd Service**: Runs as a system service
-- **SQLite Database**: No external database required
+- **رابط کاربری مدرن و فارسی**: پنل مدیریت زیبا با پشتیبانی کامل از زبان فارسی
+- **سبک و سریع**: نوشته شده با Go، باینری تک‌فایل، مصرف منابع بسیار پایین
+- **پروتکل‌های متنوع**: پشتیبانی از VMess، VLESS، Trojan و Shadowsocks
+- **نصب آسان**: اسکریپت نصب خودکار با یک دستور
+- **سرویس systemd**: اجرای پایدار به عنوان سرویس سیستم
+- **پایگاه داده SQLite**: بدون نیاز به دیتابیس خارجی
+- **سابسکریپشن هوشمند**: لینک‌های سابسکریپشن با QR Code
+- **مدیریت ترافیک**: کنترل دقیق ترافیک کاربران با گزارش‌گیری
+- **انقضای خودکار**: تنظیم تاریخ انقضا برای کاربران
+- **آمار و اطلاعات**: داشبورد کامل با آمار لحظه‌ای
 
-## Quick Installation
+## 🚀 نصب سریع
 
 ```bash
 bash <(curl -Ls https://raw.githubusercontent.com/anishtayin/server/main/install.sh)
 ```
 
-## Management Commands
+## 📋 دستورات مدیریت
 
 ```bash
-x-ui start      # Start the panel
-x-ui stop       # Stop the panel
-x-ui restart    # Restart the panel
-x-ui status     # Check panel status
-x-ui log        # View panel logs
-x-ui update     # Update to latest version
-x-ui uninstall  # Uninstall the panel
+x-ui start      # شروع پنل
+x-ui stop       # توقف پنل
+x-ui restart    # راه‌اندازی مجدد
+x-ui status     # مشاهده وضعیت
+x-ui log        # مشاهده لاگ‌ها
+x-ui update     # بروزرسانی به آخرین نسخه
+x-ui uninstall  # حذف پنل
 ```
 
-## Default Credentials
+## 🔐 اطلاعات پیش‌فرض ورود
 
-- **Username**: admin
-- **Password**: admin
-- **Port**: 2053
+- **نام کاربری**: admin
+- **رمز عبور**: admin
+- **پورت**: 2053
 
-## Access Panel
+## 🌐 دسترسی به پنل
 
-After installation, access the panel at:
+بعد از نصب، از آدرس زیر به پنل دسترسی پیدا کنید:
 ```
 http://YOUR_SERVER_IP:2053
 ```
 
-## Build from Source
+## 📦 ساخت از سورس
 
 ```bash
 go mod download
 go build -o x-ui main.go
 ```
 
-## Supported Architectures
+## 🏗️ معماری‌های پشتیبانی شده
 
 - amd64 (x86_64)
 - arm64 (aarch64)
 - arm (armv7l)
 
-## License
+## ✨ ویژگی‌های جدید نسخه فعلی
+
+### رابط کاربری
+- طراحی مدرن با Bootstrap 5 RTL
+- پشتیبانی کامل از زبان فارسی
+- آیکون‌های Material Design
+- ریسپانسیو برای موبایل و تبلت
+- حالت شب/روز
+
+### امکانات پنل
+- داشبورد با آمار لحظه‌ای
+- مدیریت اینباوندها با قابلیت افزودن/ویرایش/حذف
+- مدیریت کاربران با کنترل ترافیک و انقضا
+- تولید لینک سابسکریپشن خودکار
+- نمایش QR Code برای هر کاربر
+- ریست ترافیک کاربران
+- تنظیمات پیشرفته پنل
+
+### پروتکل‌ها
+- VMess با تنظیمات کامل
+- VLESS با پشتیبانی از Reality
+- Trojan با امنیت بالا
+- Shadowsocks با متدهای مختلف
+
+## 🔧 تنظیمات پیشرفته
+
+### تغییر پورت پنل
+```bash
+x-ui settings
+```
+
+### پشتیبان‌گیری از دیتابیس
+```bash
+cp /etc/x-ui/x-ui.db /backup/x-ui-backup.db
+```
+
+### مشاهده لاگ‌ها
+```bash
+journalctl -u x-ui -f
+```
+
+## 📊 مقایسه با 3x-ui
+
+| ویژگی | x-ui Panel | 3x-ui |
+|--------|------------|-------|
+| رابط کاربری فارسی | ✅ | ❌ |
+| طراحی مدرن | ✅ | ❌ |
+| سبک و سریع | ✅ | ✅ |
+| پشتیبانی چند پروتکل | ✅ | ✅ |
+| QR Code خودکار | ✅ | ❌ |
+| مدیریت ترافیک پیشرفته | ✅ | ✅ |
+| نصب آسان | ✅ | ✅ |
+
+## 🤝 مشارکت در پروژه
+
+از استار دادن به پروژه حمایت کنید! ⭐
+
+## 📝 لایسنس
 
 MIT License
+
+---
+
+<div align="center">
+
+**ساخته شده با ❤️ توسط anishtayin**
+
+[![Stars](https://img.shields.io/github/stars/anishtayin/server?style=social)](https://github.com/anishtayin/server/stargazers)
+[![Forks](https://img.shields.io/github/forks/anishtayin/server?style=social)](https://github.com/anishtayin/server/network/members)
+
+</div>
+
+</div>
