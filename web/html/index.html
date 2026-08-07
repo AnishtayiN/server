@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>x-ui Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; width: 100%; }
+        button:hover { background: #0056b3; }
+        .hidden { display: none; }
+        .inbound-item { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+        .status { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 12px; }
+        .status-enable { background: #d4edda; color: #155724; }
+        .status-disable { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container" id="loginForm">
+        <h1>x-ui Login</h1>
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="Enter password">
+        </div>
+        <button onclick="login()">Login</button>
+    </div>
+
+    <div class="container hidden" id="dashboard">
+        <h1>x-ui Dashboard</h1>
+        <button onclick="logout()" style="background: #dc3545; margin-bottom: 20px;">Logout</button>
+        
+        <h2>Inbounds</h2>
+        <div id="inboundsList"></div>
+        
+        <h3>Add New Inbound</h3>
+        <div class="form-group">
+            <label>Tag</label>
+            <input type="text" id="inboundTag">
+        </div>
+        <div class="form-group">
+            <label>Port</label>
+            <input type="number" id="inboundPort">
+        </div>
+        <div class="form-group">
+            <label>Protocol</label>
+            <select id="inboundProtocol">
+                <option value="vmess">VMess</option>
+                <option value="vless">VLESS</option>
+                <option value="trojan">Trojan</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Settings (JSON)</label>
+            <textarea id="inboundSettings" rows="4"></textarea>
+        </div>
+        <button onclick="addInbound()">Add Inbound</button>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin + '/xui/api';
+        
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            fetch(API_URL + '/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    localStorage.setItem('loggedIn', 'true');
+                    showDashboard();
+                } else {
+                    alert('Login failed: ' + data.msg);
+                }
+            });
+        }
+        
+        function logout() {
+            localStorage.removeItem('loggedIn');
+            location.reload();
+        }
+        
+        function showDashboard() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            loadInbounds();
+        }
+        
+        function loadInbounds() {
+            fetch(API_URL + '/inbounds')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('inboundsList');
+                    list.innerHTML = '';
+                    if (data.success && data.obj) {
+                        data.obj.forEach(inbound => {
+                            const item = document.createElement('div');
+                            item.className = 'inbound-item';
+                            item.innerHTML = `
+                                <strong>${inbound.tag}</strong> 
+                                <span class="status ${inbound.enable ? 'status-enable' : 'status-disable'}">${inbound.enable ? 'Enabled' : 'Disabled'}</span>
+                                <br>Port: ${inbound.port} | Protocol: ${inbound.protocol}
+                            `;
+                            list.appendChild(item);
+                        });
+                    }
+                });
+        }
+        
+        function addInbound() {
+            const tag = document.getElementById('inboundTag').value;
+            const port = parseInt(document.getElementById('inboundPort').value);
+            const protocol = document.getElementById('inboundProtocol').value;
+            const settings = document.getElementById('inboundSettings').value;
+            
+            fetch(API_URL + '/inbound/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tag, port, protocol, settings })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Inbound added successfully');
+                    loadInbounds();
+                } else {
+                    alert('Failed: ' + data.msg);
+                }
+            });
+        }
+        
+        if (localStorage.getItem('loggedIn') === 'true') {
+            showDashboard();
+        }
+    </script>
+</body>
+</html>
