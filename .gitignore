@@ -1,52 +1,65 @@
 ```
-# Dependencies
-go.sum
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Build artifacts
+# Go
 *.o
-*.obj
-*.out
+*.a
+*.so
+*.test
+*.prof
+coverage.out
 
-# Logs and temp files
+# Dependencies
+node_modules/
+vendor/
+
+# Logs
 *.log
-*.tmp
-*.swp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Environment
+# Environment variables
 .env
 .env.local
-*.env.*
+*.env
 
-# Editors
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Coverage
 coverage/
 htmlcov/
 .coverage
 
-# Compressed files
-*.zip
-*.gz
-*.tar
-*.tgz
-*.bz2
-*.xz
-*.7z
-*.rar
-*.zst
-*.lz4
-*.lzh
-*.cab
-*.arj
-*.rpm
-*.deb
-*.Z
-*.lz
-*.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
+# Build artifacts from deleted backend
+backend/app/__pycache__/
+backend/app/*/__pycache__/
 ```
