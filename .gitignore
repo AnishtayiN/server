@@ -1,65 +1,46 @@
 ```
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Go
+# Go build artifacts
 *.o
 *.a
 *.so
+*.dylib
+*.exe
+*.out
 *.test
-*.prof
-coverage.out
+
+# Go cache and tools
+go.mod.bak
+go.sum.bak
+*.mod
+*.sum
 
 # Dependencies
-node_modules/
 vendor/
 
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Build directories
+bin/
+dist/
+build/
 
-# Environment variables
+# Environment
 .env
 .env.local
-*.env
+.env.*
 
-# IDE
+# Editors
 .vscode/
 .idea/
 *.swp
 *.swo
 
+# Logs
+*.log
+
 # OS
 .DS_Store
 Thumbs.db
 
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# Build artifacts from deleted backend
-backend/app/__pycache__/
-backend/app/*/__pycache__/
+# Temp files
+*.tmp
+*.temp
 ```

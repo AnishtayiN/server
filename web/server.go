@@ -18,11 +18,36 @@ func StartWebServer() error {
 
 	api := r.Group("/xui/api")
 	{
+		// Auth
 		api.POST("/login", controller.Login)
+		
+		// Inbounds
 		api.GET("/inbounds", controller.GetInbounds)
+		api.GET("/inbound/:id", controller.GetInbound)
 		api.POST("/inbound/add", controller.AddInbound)
+		api.POST("/inbound/update/:id", controller.UpdateInbound)
 		api.DELETE("/inbound/:id", controller.DeleteInbound)
+		
+		// Clients
+		api.POST("/client/add", controller.AddClient)
+		api.POST("/client/update/:id", controller.UpdateClient)
+		api.DELETE("/client/:id", controller.DeleteClient)
+		api.GET("/client/:id/links", controller.GetClientLinks)
+		api.GET("/client/:id/qrcode", controller.GetQRCode)
+		api.POST("/client/:id/resetTraffic", controller.ResetClientTraffic)
+		
+		// Subscription
+		api.GET("/subscription/:subid", controller.GetSubscription)
+		
+		// Stats & Settings
+		api.GET("/stats", controller.GetStats)
+		api.GET("/settings", controller.GetSettings)
+		api.POST("/settings", controller.UpdateSettings)
+		api.POST("/resetAllTraffic", controller.ResetAllTraffic)
 	}
+
+	// Subscription endpoint (public, no auth required)
+	r.GET("/sub/:subid", controller.GetSubscription)
 
 	subFS, _ := fs.Sub(staticFiles, "html")
 	r.StaticFS("/", http.FS(subFS))
