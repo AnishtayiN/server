@@ -9,7 +9,7 @@ from ..auth import get_current_admin
 router = APIRouter(prefix="/api/inbounds", tags=["inbounds"])
 
 @router.get("", response_model=List[schemas.InboundResponse])
-def list_inbounds(db: Session = Depends(get_db), _: models.Admin = Depends(get_current_admin)):
+def list_inbounds(db: Session = Depends(get_db), current_admin: models.Admin = Depends(get_current_admin)):
     inbounds = db.query(models.Inbound).all()
     result = []
     for ib in inbounds:
@@ -22,13 +22,13 @@ def list_inbounds(db: Session = Depends(get_db), _: models.Admin = Depends(get_c
 def create_inbound(
     inbound: schemas.InboundCreate,
     db: Session = Depends(get_db),
-    _: models.Admin = Depends(get_current_admin)
+    current_admin: models.Admin = Depends(get_current_admin)
 ):
     if db.query(models.Inbound).filter(models.Inbound.tag == inbound.tag).first():
-        raise HTTPException(400, "Inbound tag already exists")
+        raise HTTPException(status_code=400, detail="Inbound tag already exists")
     
     if db.query(models.Inbound).filter(models.Inbound.port == inbound.port).first():
-        raise HTTPException(400, "Port already in use")
+        raise HTTPException(status_code=400, detail="Port already in use")
     
     db_inbound = models.Inbound(**inbound.model_dump())
     db.add(db_inbound)
@@ -41,11 +41,11 @@ def update_inbound(
     inbound_id: int,
     data: schemas.InboundUpdate,
     db: Session = Depends(get_db),
-    _: models.Admin = Depends(get_current_admin)
+    current_admin: models.Admin = Depends(get_current_admin)
 ):
     db_ib = db.query(models.Inbound).filter(models.Inbound.id == inbound_id).first()
     if not db_ib:
-        raise HTTPException(404, "Inbound not found")
+        raise HTTPException(status_code=404, detail="Inbound not found")
     
     for key, value in data.model_dump(exclude_unset=True).items():
         setattr(db_ib, key, value)
@@ -58,11 +58,11 @@ def update_inbound(
 def delete_inbound(
     inbound_id: int,
     db: Session = Depends(get_db),
-    _: models.Admin = Depends(get_current_admin)
+    current_admin: models.Admin = Depends(get_current_admin)
 ):
     db_ib = db.query(models.Inbound).filter(models.Inbound.id == inbound_id).first()
     if not db_ib:
-        raise HTTPException(404, "Inbound not found")
+        raise HTTPException(status_code=404, detail="Inbound not found")
     db.delete(db_ib)
     db.commit()
 
@@ -70,9 +70,9 @@ def delete_inbound(
 def list_clients(
     inbound_id: int,
     db: Session = Depends(get_db),
-    _: models.Admin = Depends(get_current_admin)
+    current_admin: models.Admin = Depends(get_current_admin)
 ):
     db_ib = db.query(models.Inbound).filter(models.Inbound.id == inbound_id).first()
     if not db_ib:
-        raise HTTPException(404, "Inbound not found")
+        raise HTTPException(status_code=404, detail="Inbound not found")
     return db_ib.clients

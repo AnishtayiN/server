@@ -12,7 +12,7 @@ def list_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
-    _: models.Admin = Depends(auth.get_current_admin)
+    current_admin: models.Admin = Depends(auth.get_current_admin)
 ):
     return crud.get_users(db, skip=skip, limit=limit)
 
@@ -20,7 +20,7 @@ def list_users(
 def create_user(
     user: schemas.UserCreate,
     db: Session = Depends(get_db),
-    _: models.Admin = Depends(auth.get_current_admin)
+    current_admin: models.Admin = Depends(auth.get_current_admin)
 ):
     if crud.get_user_by_username(db, user.username):
         raise HTTPException(status_code=400, detail="Username already exists")
