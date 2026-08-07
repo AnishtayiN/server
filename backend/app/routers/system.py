@@ -14,7 +14,7 @@ START_TIME = time.time()
 @router.get("/stats", response_model=schemas.SystemStats)
 def get_stats(
     db: Session = Depends(get_db),
-    _: models.Admin = Depends(get_current_admin)
+    current_admin: models.Admin = Depends(get_current_admin)
 ):
     stats = crud.get_system_stats(db)
     stats.cpu_percent = psutil.cpu_percent(interval=0.5)

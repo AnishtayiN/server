@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from typing import List
 from datetime import datetime, timedelta, timezone
@@ -20,14 +20,14 @@ def create_client(
     inbound_id: int,
     client: schemas.ClientCreate,
     db: Session = Depends(get_db),
-    _: models.Admin = Depends(get_current_admin)
+    current_admin: models.Admin = Depends(get_current_admin)
 ):
     db_ib = db.query(models.Inbound).filter(models.Inbound.id == inbound_id).first()
     if not db_ib:
-        raise HTTPException(404, "Inbound not found")
+        raise HTTPException(status_code=404, detail="Inbound not found")
     
     if db.query(models.Client).filter(models.Client.email == client.email).first():
-        raise HTTPException(400, "Email already exists")
+        raise HTTPException(status_code=400, detail="Email already exists")
     
     expiry = None
     if client.expiry_days:
@@ -51,11 +51,11 @@ def update_client(
     client_id: int,
     data: schemas.ClientUpdate,
     db: Session = Depends(get_db),
-    _: models.Admin = Depends(get_current_admin)
+    current_admin: models.Admin = Depends(get_current_admin)
 ):
     db_client = db.query(models.Client).filter(models.Client.id == client_id).first()
     if not db_client:
-        raise HTTPException(404, "Client not found")
+        raise HTTPException(status_code=404, detail="Client not found")
     
     if data.traffic_limit_gb is not None:
         db_client.traffic_limit_bytes = data.traffic_limit_gb * 1024**3
@@ -71,10 +71,10 @@ def update_client(
     return db_client
 
 @router.delete("/{client_id}", status_code=204)
-def delete_client(client_id: int, db: Session = Depends(get_db), _: models.Admin = Depends(get_current_admin)):
+def delete_client(client_id: int, db: Session = Depends(get_db), current_admin: models.Admin = Depends(get_current_admin)):
     db_client = db.query(models.Client).filter(models.Client.id == client_id).first()
     if not db_client:
-        raise HTTPException(404, "Client not found")
+        raise HTTPException(status_code=404, detail="Client not found")
     db.delete(db_client)
     db.commit()
 
@@ -82,14 +82,14 @@ def delete_client(client_id: int, db: Session = Depends(get_db), _: models.Admin
 def get_client_links(
     client_id: int,
     db: Session = Depends(get_db),
-    _: models.Admin = Depends(get_current_admin)
+    current_admin: models.Admin = Depends(get_current_admin)
 ):
     db_client = db.query(models.Client).options(
         joinedload(models.Client.inbound)
     ).filter(models.Client.id == client_id).first()
     
     if not db_client:
-        raise HTTPException(404, "Client not found")
+        raise HTTPException(status_code=404, detail="Client not found")
     
     host = "your-server.com"
     link = LinkGenerator.generate_link(db_client, db_client.inbound, host)
