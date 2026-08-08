@@ -19,8 +19,6 @@ services:
       - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD:-admin123}
     networks:
       - xpanel_network
-    depends_on:
-      - xray
 
   xray:
     image: ghcr.io/xtls/xray-core:latest

@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 import psutil
 import os
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
 
 from database import get_db
 from models import Admin, User, Inbound, TrafficLog
@@ -140,7 +140,7 @@ async def get_user_stats(
         "connection_count": user.connection_count,
         "last_connected": user.last_connected,
         "expiry_date": user.expiry_date,
-        "days_remaining": None if not user.expiry_date else max(0, (user.expiry_date - datetime.utcnow()).days)
+        "days_remaining": None if not user.expiry_date else max(0, (user.expiry_date - datetime.now(timezone.utc)).days)
     }
 
 
@@ -150,8 +150,6 @@ async def get_system_logs(
     current_admin: Admin = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
 ):
-    from models import ServerLog
-    
     query = select(ServerLog).order_by(ServerLog.created_at.desc()).limit(limit)
     result = await db.execute(query)
     logs = result.scalars().all()
