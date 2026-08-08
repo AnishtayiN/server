@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import uuid
 
@@ -68,8 +68,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
         expires_delta=access_token_expires
     )
     
-    # Update last login
-    admin.last_login = datetime.utcnow()
+    # Update last login with timezone-aware datetime
+    admin.last_login = datetime.now(timezone.utc)
     await db.commit()
     
     return {"access_token": access_token, "token_type": "bearer"}
@@ -192,10 +192,10 @@ async def create_user(
     # Generate UUID for the user
     user_uuid = str(uuid.uuid4())
     
-    # Calculate expiry date if provided
+    # Calculate expiry date if provided (using timezone-aware datetime)
     expiry_date = None
     if user_data.expiry_days:
-        expiry_date = datetime.utcnow() + timedelta(days=user_data.expiry_days)
+        expiry_date = datetime.now(timezone.utc) + timedelta(days=user_data.expiry_days)
     
     # Generate protocol-specific config
     config = generate_user_config(

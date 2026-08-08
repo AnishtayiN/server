@@ -21,10 +21,12 @@ func InitLogger() {
 	logDir := "/var/log/x-ui"
 	if err := os.MkdirAll(logDir, 0755); err != nil {
 		log.Warnf("Failed to create log directory %s: %v", logDir, err)
+		// Continue with stdout logging even if file logging fails
 	} else {
 		file, err := os.OpenFile(filepath.Join(logDir, "x-ui.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
 			log.Warnf("Failed to open log file: %v", err)
+			// Continue with stdout logging
 		} else {
 			log.SetOutput(file)
 		}
