@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -17,8 +18,18 @@ import (
 var (
 	db         *gorm.DB
 	once       sync.Once
-	encryptKey = []byte("3xui_encryption_key_2024_secure!")
+	encryptKey []byte
 )
+
+// generateEncryptKey generates a random encryption key or loads from settings
+func generateEncryptKey() {
+	key := make([]byte, 32) // AES-256
+	if _, err := rand.Read(key); err != nil {
+		// Fallback to a default key (should not happen in production)
+		key = []byte("fallback_key_32_bytes_long_key!")
+	}
+	encryptKey = key
+}
 
 // User represents admin user
 type User struct {
@@ -135,14 +146,17 @@ func decrypt(encoded string) (string, error) {
 
 // InitDB initializes the database connection and creates tables
 func InitDB() error {
-	var err error
+	var initErr error
 	once.Do(func() {
-		db, err = gorm.Open(sqlite.Open("/etc/x-ui/x-ui.db?cache=shared"), &gorm.Config{})
-		if err != nil {
+		// Generate encryption key on startup
+		generateEncryptKey()
+		
+		db, initErr = gorm.Open(sqlite.Open("/etc/x-ui/x-ui.db?cache=shared"), &gorm.Config{})
+		if initErr != nil {
 			return
 		}
-		err = db.AutoMigrate(&User{}, &Inbound{}, &Client{}, &Stats{}, &Settings{}, &TrafficLog{}, &OnlineUser{})
-		if err != nil {
+		initErr = db.AutoMigrate(&User{}, &Inbound{}, &Client{}, &Stats{}, &Settings{}, &TrafficLog{}, &OnlineUser{})
+		if initErr != nil {
 			return
 		}
 		// Create default admin user if not exists
@@ -155,7 +169,7 @@ func InitDB() error {
 		// Create default settings
 		createDefaultSettings()
 	})
-	return err
+	return initErr
 }
 
 func createDefaultSettings() {
@@ -191,17 +205,18 @@ func GetDB() *gorm.DB {
 }
 
 func hashPassword(password string) string {
-	hashed, _ := encrypt(password)
-	return hashed
+	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		// Fallback: should not happen in production
+		return ""
+	}
+	return string(hashed)
 }
 
 // CheckPassword verifies a password against its hash
 func CheckPassword(hashed, password string) bool {
-	decrypted, err := decrypt(hashed)
-	if err != nil {
-		return false
-	}
-	return decrypted == password
+	err := bcrypt.CompareHashAndPassword([]byte(hashed), []byte(password))
+	return err == nil
 }
 
 // CloseDB closes the database connection

@@ -4,11 +4,52 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/anishtayin/server/database"
 	"github.com/anishtayin/server/web/service"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 )
+
+// JWT secret key - should be loaded from environment in production
+var jwtKey = []byte("your-secret-key-change-in-production-2024!")
+
+type Claims struct {
+	Username string `json:"username"`
+	jwt.RegisteredClaims
+}
+
+// AuthMiddleware validates JWT tokens
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Authorization")
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"success": false, "msg": "Missing authorization token"})
+			c.Abort()
+			return
+		}
+
+		// Remove Bearer prefix if present
+		if strings.HasPrefix(tokenString, "Bearer ") {
+			tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+		}
+
+		claims := &Claims{}
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			return jwtKey, nil
+		})
+
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"success": false, "msg": "Invalid or expired token"})
+			c.Abort()
+			return
+		}
+
+		c.Set("username", claims.Username)
+		c.Next()
+	}
+}
 
 type LoginForm struct {
 	Username string `json:"username" binding:"required"`
@@ -47,7 +88,29 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"success": true, "msg": "Login successful", "username": form.Username})
+	// Generate JWT token
+	claims := &Claims{
+		Username: form.Username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(jwtKey)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "Failed to generate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":    true,
+		"msg":        "Login successful",
+		"username":   form.Username,
+		"token":      tokenString,
+		"expires_in": int64(24 * 60 * 60), // seconds
+	})
 }
 
 func GetInbounds(c *gin.Context) {

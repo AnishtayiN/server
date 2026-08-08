@@ -17,10 +17,21 @@ import (
 
 	"github.com/anishtayin/server/database"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-var encryptKey = []byte("3xui_encryption_key_2024_secure!")
+var encryptKey []byte
+
+// init generates encryption key on package initialization
+func init() {
+	key := make([]byte, 32) // AES-256
+	if _, err := rand.Read(key); err != nil {
+		// Fallback to a default key (should not happen in production)
+		key = []byte("fallback_key_32_bytes_long_key!")
+	}
+	encryptKey = key
+}
 
 // generateSubID generates a unique subscription ID
 func generateSubID() string {
@@ -65,11 +76,8 @@ func decrypt(encoded string) (string, error) {
 }
 
 func checkPassword(hashed, password string) bool {
-	decrypted, err := decrypt(hashed)
-	if err != nil {
-		return false
-	}
-	return decrypted == password
+	err := bcrypt.CompareHashAndPassword([]byte(hashed), []byte(password))
+	return err == nil
 }
 
 // Login authenticates a user

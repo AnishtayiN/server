@@ -18,8 +18,11 @@ func StartWebServer() error {
 
 	api := r.Group("/xui/api")
 	{
-		// Auth
+		// Auth (no auth required for login)
 		api.POST("/login", controller.Login)
+		
+		// All other endpoints require authentication
+		api.Use(controller.AuthMiddleware())
 		
 		// Inbounds
 		api.GET("/inbounds", controller.GetInbounds)
@@ -36,9 +39,6 @@ func StartWebServer() error {
 		api.GET("/client/:id/qrcode", controller.GetQRCode)
 		api.POST("/client/:id/resetTraffic", controller.ResetClientTraffic)
 		
-		// Subscription
-		api.GET("/subscription/:subid", controller.GetSubscription)
-		
 		// Stats & Settings
 		api.GET("/stats", controller.GetStats)
 		api.GET("/settings", controller.GetSettings)
@@ -46,7 +46,7 @@ func StartWebServer() error {
 		api.POST("/resetAllTraffic", controller.ResetAllTraffic)
 	}
 
-	// Subscription endpoint (public, no auth required)
+	// Subscription endpoint (public, no auth required - uses subID for auth)
 	r.GET("/sub/:subid", controller.GetSubscription)
 
 	subFS, _ := fs.Sub(staticFiles, "html")
