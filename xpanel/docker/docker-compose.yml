@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  xpanel:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: xpanel
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - xpanel_data:/app/data
+      - xpanel_config:/app/config
+      - xpanel_logs:/app/logs
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - DATABASE_TYPE=${DATABASE_TYPE:-sqlite}
+      - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD:-admin123}
+    networks:
+      - xpanel_network
+    depends_on:
+      - xray
+
+  xray:
+    image: ghcr.io/xtls/xray-core:latest
+    container_name: xray
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - xpanel_config:/etc/xray
+    environment:
+      - XRAY_VMESS_AEAD_FORCED=false
+    depends_on:
+      - xpanel
+
+volumes:
+  xpanel_data:
+  xpanel_config:
+  xpanel_logs:
+
+networks:
+  xpanel_network:
+    driver: bridge
